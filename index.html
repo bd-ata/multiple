@@ -112,6 +112,10 @@
 <div class="pair-display" id="pair-display"></div>
 <button id="next-button" onclick="nextQuestion()">下一題</button>
 
+<!-- 音效檔案 -->
+<audio id="correct-sound" src="correct.mp3"></audio>
+<audio id="wrong-sound" src="wrong.mp3"></audio>
+
 <script>
     const progressElement = document.getElementById('current-question');
     const numberElement = document.getElementById('number');
@@ -127,6 +131,8 @@
     let incorrectCount = 0;
     let baseNumber;
     let correctPairs = [];
+
+    const mustIncludeNumbers = [13, 19, 17, 23, 27];
 
     function startGame() {
         resetGame();
@@ -155,11 +161,19 @@
     }
 
     function generateQuestion() {
-        baseNumber = Math.floor(Math.random() * 10) + 1;
+        baseNumber = mustIncludeNumbers.length > 0 ? mustIncludeNumbers.shift() : Math.floor(Math.random() * 100) + 1;
         numberElement.textContent = baseNumber;
         correctPairs = generateMultiples(baseNumber);
         pairDisplay.innerHTML = ''; // 清空配對結果
         nextButton.style.display = 'none';
+    }
+
+    function generateMultiples(num) {
+        const multiples = [];
+        for (let i = 1; i <= 5; i++) {
+            multiples.push(num * i);
+        }
+        return multiples.sort((a, b) => a - b);
     }
 
     function displayOptions() {
@@ -175,14 +189,6 @@
             optionDiv.addEventListener('click', () => selectOption(optionDiv));
             optionsContainer.appendChild(optionDiv);
         });
-    }
-
-    function generateMultiples(num) {
-        const multiples = [];
-        for (let i = 1; i <= 5; i++) {
-            multiples.push(num * i);
-        }
-        return multiples;
     }
 
     function generateNonMultiples() {
@@ -212,13 +218,15 @@
             element.classList.add('incorrect');
             incorrectCount++;
             incorrectCountElement.textContent = incorrectCount;
+            playSound('wrong');
         }
     }
 
     function displayPair(value) {
+        const factor = value / baseNumber;
         const pairDiv = document.createElement('div');
         pairDiv.classList.add('pair');
-        pairDiv.textContent = `${value} 是 ${baseNumber} 的倍數`;
+        pairDiv.textContent = `${value} = ${baseNumber} × ${factor}`;
         pairDisplay.appendChild(pairDiv);
     }
 
@@ -226,7 +234,14 @@
         const matchedCards = document.querySelectorAll('.correct');
         if (matchedCards.length === correctPairs.length) {
             nextButton.style.display = 'block';
+            pairDisplay.innerHTML += `<p>${baseNumber} 的倍數有：${correctPairs.join('、')}......</p>`;
         }
+    }
+
+    function playSound(type) {
+        const sound = document.getElementById(`${type}-sound`);
+        sound.currentTime = 0;
+        sound.play();
     }
 
     startGame();
