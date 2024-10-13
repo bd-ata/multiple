@@ -1,1 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>找倍數配對遊戲</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
 
+        h1 {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px 0;
+            margin: 0;
+        }
+
+        #progress {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        #target-number {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        #options {
+            width: 80%;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .option {
+            width: 80px;
+            height: 80px;
+            background-color: #fff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 10px;
+            user-select: none;
+            border: 2px solid #4CAF50;
+            margin: 10px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .option:hover {
+            transform: scale(1.05);
+            background-color: #e8f5e9;
+        }
+
+        .correct {
+            background-color: #A5D6A7;
+            cursor: default;
+        }
+
+        .incorrect {
+            background-color: #E57373;
+            cursor: default;
+        }
+
+        #score {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        .pair-display {
+            margin-top: 20px;
+        }
+
+        .pair {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #FFD54F;
+            border-radius: 5px;
+        }
+
+        #next-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+            margin: 20px auto;
+            display: block;
+        }
+
+        #next-button:hover {
+            background-color: #45A049;
+        }
+    </style>
+</head>
+<body>
+
+<h1>找倍數配對遊戲</h1>
+<div id="progress">目前已挑戰第 <span id="current-question">1</span> / 10 題</div>
+<div id="target-number">請找出數字 <strong id="number"></strong> 的倍數</div>
+<div id="options"></div>
+<div id="score">正確配對：<span id="correct-count">0</span> | 錯誤配對：<span id="incorrect-count">0</span></div>
+<div class="pair-display" id="pair-display"></div>
+<button id="next-button" onclick="nextQuestion()">下一題</button>
+
+<script>
+    const progressElement = document.getElementById('current-question');
+    const numberElement = document.getElementById('number');
+    const optionsContainer = document.getElementById('options');
+    const correctCountElement = document.getElementById('correct-count');
+    const incorrectCountElement = document.getElementById('incorrect-count');
+    const pairDisplay = document.getElementById('pair-display');
+    const nextButton = document.getElementById('next-button');
+
+    let currentQuestion = 1;
+    const totalQuestions = 10;
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let baseNumber;
+
+    function startGame() {
+        resetGame();
+        nextQuestion();
+    }
+
+    function resetGame() {
+        correctCount = 0;
+        incorrectCount = 0;
+        currentQuestion = 1;
+        correctCountElement.textContent = correctCount;
+        incorrectCountElement.textContent = incorrectCount;
+        nextButton.style.display = 'none';
+        pairDisplay.innerHTML = '';
+    }
+
+    function nextQuestion() {
+        if (currentQuestion <= totalQuestions) {
+            generateQuestion();
+            displayOptions();
+            progressElement.textContent = currentQuestion;
+            currentQuestion++;
+        } else {
+            alert(`遊戲結束！你完成了 ${correctCount} 次正確配對。`);
+        }
+    }
+
+    function generateQuestion() {
+        baseNumber = Math.floor(Math.random() * 10) + 1;
+        numberElement.textContent = baseNumber;
+        pairDisplay.innerHTML = '';  // 清空配對結果
+    }
+
+    function displayOptions() {
+        optionsContainer.innerHTML = '';
+        const options = generateMultiples(baseNumber).concat(generateNonMultiples());
+        shuffle(options);
+
+        options.forEach(value => {
+            const optionDiv = document.createElement('div');
+            optionDiv.classList.add('option');
+            optionDiv.textContent = value;
+            optionDiv.dataset.value = value;
+            optionDiv.addEventListener('click', () => selectOption(optionDiv));
+            optionsContainer.appendChild(optionDiv);
+        });
+    }
+
+    function generateMultiples(num) {
+        const multiples = [];
+        for (let i = 1; i <= 10; i++) {
+            multiples.push(num * i);
+        }
+        return multiples;
+    }
+
+    function generateNonMultiples() {
+        const nonMultiples = [];
+        while (nonMultiples.length < 10) {
+            const randomNum = Math.floor(Math.random() * 100) + 1;
+            if (randomNum % baseNumber !== 0) {
+                nonMultiples.push(randomNum);
+            }
+        }
+        return nonMultiples;
+    }
+
+    function shuffle(array) {
+        array.sort(() => Math.random() - 0.5);
+    }
+
+    function selectOption(element) {
+        const value = parseInt(element.dataset.value);
+        if (value % baseNumber === 0) {
+            element.classList.add('correct');
+            correctCount++;
+            correctCountElement.textContent = correctCount;
+            displayPair(value);
+        } else {
+            element.classList.add('incorrect');
+            incorrectCount++;
+            incorrectCountElement.textContent = incorrectCount;
+        }
+    }
+
+    function displayPair(value) {
+        const pairDiv = document.createElement('div');
+        pairDiv.classList.add('pair');
+        pairDiv.textContent = `${value} 是 ${baseNumber} 的倍數`;
+        pairDisplay.appendChild(pairDiv);
+    }
+
+    startGame();
+</script>
+
+</body>
+</html>
