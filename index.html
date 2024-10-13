@@ -95,7 +95,6 @@
             cursor: pointer;
             display: none;
             margin: 20px auto;
-            display: block;
         }
 
         #next-button:hover {
@@ -127,6 +126,7 @@
     let correctCount = 0;
     let incorrectCount = 0;
     let baseNumber;
+    let correctPairs = [];
 
     function startGame() {
         resetGame();
@@ -157,12 +157,14 @@
     function generateQuestion() {
         baseNumber = Math.floor(Math.random() * 10) + 1;
         numberElement.textContent = baseNumber;
-        pairDisplay.innerHTML = '';  // 清空配對結果
+        correctPairs = generateMultiples(baseNumber);
+        pairDisplay.innerHTML = ''; // 清空配對結果
+        nextButton.style.display = 'none';
     }
 
     function displayOptions() {
         optionsContainer.innerHTML = '';
-        const options = generateMultiples(baseNumber).concat(generateNonMultiples());
+        const options = [...correctPairs, ...generateNonMultiples()];
         shuffle(options);
 
         options.forEach(value => {
@@ -177,7 +179,7 @@
 
     function generateMultiples(num) {
         const multiples = [];
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 5; i++) {
             multiples.push(num * i);
         }
         return multiples;
@@ -200,11 +202,12 @@
 
     function selectOption(element) {
         const value = parseInt(element.dataset.value);
-        if (value % baseNumber === 0) {
+        if (correctPairs.includes(value)) {
             element.classList.add('correct');
             correctCount++;
             correctCountElement.textContent = correctCount;
             displayPair(value);
+            checkAllMatched();
         } else {
             element.classList.add('incorrect');
             incorrectCount++;
@@ -217,6 +220,13 @@
         pairDiv.classList.add('pair');
         pairDiv.textContent = `${value} 是 ${baseNumber} 的倍數`;
         pairDisplay.appendChild(pairDiv);
+    }
+
+    function checkAllMatched() {
+        const matchedCards = document.querySelectorAll('.correct');
+        if (matchedCards.length === correctPairs.length) {
+            nextButton.style.display = 'block';
+        }
     }
 
     startGame();
